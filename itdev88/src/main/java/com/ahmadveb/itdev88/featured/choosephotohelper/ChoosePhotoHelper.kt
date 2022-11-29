@@ -1,4 +1,4 @@
-package com.ahmadveb.itdev88.feature.choosephotohelper
+package com.ahmadveb.itdev88.featured.choosephotohelper
 
 import android.Manifest
 import android.app.Activity
