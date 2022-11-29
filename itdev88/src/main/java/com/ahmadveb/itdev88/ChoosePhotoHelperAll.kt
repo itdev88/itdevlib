@@ -1,4 +1,4 @@
-package com.ahmadveb.itdev88.featured.choosephotohelper
+package com.ahmadveb.itdev88.choosephotohelper
 
 import android.Manifest
 import android.app.Activity
@@ -35,7 +35,7 @@ import java.util.*
 /**
  * @author ahmad_itdev88
  */
-class ChoosePhotoHelper private constructor(
+class ChoosePhotoHelperAll private constructor(
     private val activity: Activity,
     private val fragment: Fragment?,
     private val whichSource: WhichSource,
@@ -67,8 +67,8 @@ class ChoosePhotoHelper private constructor(
                 setAdapter(it) { _, which ->
                     when (which) {
                         0 -> checkAndStartCamera()
-                       // 1 -> checkAndShowPicker()
-                        1 -> {
+                        1 -> checkAndShowPicker()
+                        2 -> {
                             filePath = null
                             callback.onChoose(null)
                         }
@@ -175,10 +175,10 @@ class ChoosePhotoHelper private constructor(
                     KEY_TITLE to activity.getString(R.string.camera),
                     KEY_ICON to R.drawable.ic_photo_camera_black_24dp
                 ),
-                /*mutableMapOf(
-                    KEY_TITLE to activity.getString(R.string.gallerys),
+                mutableMapOf(
+                    KEY_TITLE to activity.getString(R.string.gallery),
                     KEY_ICON to R.drawable.ic_photo_black_24dp
-                ),*/
+                ),
                 mutableMapOf(
                     KEY_TITLE to activity.getString(R.string.remove_photo),
                     KEY_ICON to R.drawable.ic_delete_black_24dp
@@ -189,11 +189,11 @@ class ChoosePhotoHelper private constructor(
                 mutableMapOf(
                     KEY_TITLE to activity.getString(R.string.camera),
                     KEY_ICON to R.drawable.ic_photo_camera_black_24dp
-                ) /*,
+                ) ,
                 mutableMapOf(
                     KEY_TITLE to activity.getString(R.string.gallery),
                     KEY_ICON to R.drawable.ic_photo_black_24dp
-                )*/
+                )
             )
         }
     }
@@ -315,9 +315,9 @@ class ChoosePhotoHelper private constructor(
             return this
         }
 
-        fun build(callback: ChoosePhotoCallback<T>): ChoosePhotoHelper {
+        fun build(callback: ChoosePhotoCallback<T>): ChoosePhotoHelperAll {
             return when (which) {
-                WhichSource.ACTIVITY -> ChoosePhotoHelper(
+                WhichSource.ACTIVITY -> ChoosePhotoHelperAll(
                     activity!!,
                     null,
                     which,
@@ -327,7 +327,7 @@ class ChoosePhotoHelper private constructor(
                     cameraFilePath,
                     alwaysShowRemoveOption
                 )
-                WhichSource.FRAGMENT -> ChoosePhotoHelper(
+                WhichSource.FRAGMENT -> ChoosePhotoHelperAll(
                     fragment!!.requireActivity(),
                     fragment,
                     which,
