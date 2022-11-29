@@ -16,11 +16,7 @@ public class Signature {
         // String = 2019-03-19T16:14:15.856+07:00
 //        SimpleDateFormat fmtOut = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
         SimpleDateFormat fmtOut;
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N){
-            fmtOut = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ");
-        }else{
-            fmtOut = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-        }
+        fmtOut = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
         return fmtOut.format(new Date());
     }
 
