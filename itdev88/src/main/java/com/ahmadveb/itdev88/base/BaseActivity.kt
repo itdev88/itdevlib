@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 import com.ahmadveb.itdev88.R
-\import com.ahmadveb.itdev88.ui.ext.toast
+import com.ahmadveb.itdev88.ui.ext.toast
 import com.ahmadveb.itdev88.utils.ExtensionFunctions.toast
 import com.ahmadveb.itdev88.utils.Helper
 
