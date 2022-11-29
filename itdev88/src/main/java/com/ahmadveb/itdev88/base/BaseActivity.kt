@@ -5,8 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 import com.ahmadveb.itdev88.R
-import com.ahmadveb.itdev88.featured.main.MainActivity
-import com.ahmadveb.itdev88.ui.ext.toast
+\import com.ahmadveb.itdev88.ui.ext.toast
 import com.ahmadveb.itdev88.utils.ExtensionFunctions.toast
 import com.ahmadveb.itdev88.utils.Helper
 
@@ -85,30 +84,6 @@ abstract class BaseActivity<P : BasePresenter<V>, V : BaseViewImpl> : AppCompatA
 
     fun hideKeyboard() {
         Helper.hideKeyboard(this)
-    }
-
-    fun restartMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-    }
-
-    fun restartLoginActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-    }
-
-    fun openMaintenanceActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-    }
-
-    fun openUpdateActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
     }
 
 

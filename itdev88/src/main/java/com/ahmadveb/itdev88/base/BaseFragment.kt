@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.ahmadveb.itdev88.R
-import com.ahmadveb.itdev88.featured.main.MainActivity
 import com.ahmadveb.itdev88.ui.ext.toast
 import com.ahmadveb.itdev88.utils.Helper
 
@@ -88,30 +87,6 @@ abstract class BaseFragment<P : BasePresenter<V>, V: BaseViewImpl> : Fragment() 
 
     fun hideKeyboard() {
         Helper.hideKeyboard(activity!!)
-    }
-
-    fun restartMainActivity() {
-        val intent = Intent(activity!!, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-    }
-
-    fun restartLoginActivity() {
-        val intent = Intent(activity!!, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-    }
-
-    fun openMaintenanceActivity() {
-        val intent = Intent(activity!!, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-    }
-
-    fun openUpdateActivity() {
-        val intent = Intent(activity!!, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
     }
 
 }
