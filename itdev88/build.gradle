@@ -24,18 +24,6 @@ android {
             storePassword 'android'
         }
     }
-    afterEvaluate {
-        publishing {
-            publications {
-                release(MavenPublication) {
-                    from components.release
-                    groupId = 'com.github.itdev88'
-                    artifactId = 'itdevlib'
-                    version = '0.0.1'
-                }
-            }
-        }
-    }
     buildTypes {
         debug {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -54,8 +42,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility kotlin_version
-        targetCompatibility kotlin_version
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
     kotlinOptions {
         jvmTarget = '1.8'
@@ -83,3 +71,16 @@ dependencies {
     implementation 'com.jakewharton.threetenabp:threetenabp:1.2.1'
     implementation 'com.squareup.picasso:picasso:2.8'
 }
+
+afterEvaluate {
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    from components.release
+                    groupId = 'com.github.itdev88'
+                    artifactId = 'itdevlib'
+                    version = '0.0.2'
+                }
+            }
+        }
+    }
