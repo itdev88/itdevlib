@@ -10,7 +10,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.ahmadveb.itdev88.utils.MyTagHandler
 
 
 fun View.toGone() {
@@ -34,14 +33,7 @@ fun AppCompatActivity.toast(context: Context, msg: String) {
 }
 
 fun TextView.htmlText(text: String) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY, null, MyTagHandler()))
-    } else {
-//        setText(Html.fromHtml(text))
-        setText(
-            Html.fromHtml(text, null, MyTagHandler())
-        )
-    }
+    setText(Html.fromHtml(text))
 }
 
 fun Drawable.setColorFilter(color: Int) {
