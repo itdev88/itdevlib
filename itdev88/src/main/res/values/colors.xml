@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#2196F3</color>
+    <color name="colorPrimaryDark">#1D78C1</color>
+    <color name="colorPrimaryLight">#9ACDF6</color>
+    <color name="colorPrimaryLight30">#4D2196F3</color>
+    <color name="colorPrimaryLight70">#B32196F3</color>
+    <color name="colorAccent">#1A74BC</color>
+    <color name="colorAccentLight">#A2CDEF</color>
+    <color name="colorAccentDark">#356DBF</color>
+    <color name="colorAccentDarkHard">#24487E</color>
+
+    <color name="primaryText">#333C3A</color>
+    <color name="secondaryText">#7B8696</color>
+    <color name="transparent_white">#CCFFFFFF</color>
+
+    <color name="white_gray">#f3f5f7</color>
+    <color name="white">#ffffff</color>
+    <color name="blue">#2196F3</color>
+    <color name="green">#4CAF50</color>
+    <color name="yellow">#FFEB3B</color>
+    <color name="white50">#CCFFFFFF</color>
+    <color name="divider">#E2E2E2</color>
+    <color name="divider_light">#F3F3F3</color>
+    <color name="vermillion">#dc1818</color>
+    <color name="orange">#ffa500</color>
+    <color name="orange_dark">#B87700</color>
+    <color name="black_60">#99000000</color>
+    <color name="bg_gray">#EEEEEE</color>
+    <color name="bg_tab">#A2A2A2</color>
+    <color name="dark_gray">#858585</color>
+    <color name="black">#000000</color>
+    <color name="bg_header_success">#17B80C</color>
+    <color name="charcoal_grey_two_opa_64">#A339434E</color>
+
+    <color name="status_credit_bg">#1ADC1818</color>
+    <color name="status_credit_text">#dc1818</color>
+    <color name="status_finish_text">#9C27B0</color>
+    <color name="status_cancel_bg">#1A000000</color>
+    <color name="status_cancel_text">#000000</color>
+    <color name="status_success_bg">#1AB226CA</color>
+    <color name="status_finish_bg">#1B4CAF50</color>
+    <color name="status_success_text">#008c8c</color>
+    <color name="status_debt_bg">#1BAF7A4C</color>
+    <color name="status_debt_text">#FF9800</color>
+
+    <color name="colorControlHighlight">#DFDFDF</color>
+    <color name="rippleColorHighlight">#7F717171</color>
+    <color name="rippleColorHigherlight">#99000000</color>
+    <color name="pressColorHighlight">#1F515151</color>
+    <color name="focusColorHighlight">#1F717171</color>
+
+    <color name="light_font">#FBFBFB</color>
+    <color name="grey_font">#ff9e9e9e</color>
+    <color name="text_shadow">#7F000000</color>
+    <color name="text_shadow_white">#FFFFFF</color>
+
+    <color name="colorGreenLight70">#B34CAF50</color>
+    <color name="colorGreenLight30">#4D4CAF50</color>
+    <color name="colorRedLight30">#4DF44336</color>
+    <color name="colorOrangeLight30">#4DFF9800</color>
+    <color name="colorBlueLight30">#4D2196F3</color>
+    <color name="colorPurpleLight30">#4D9C27B0</color>
+    <color name="colorChocoLight30">#4D9F5200</color>
+    <color name="colorGreyLight30">#4D00FFB7</color>
+    <color name="colorYelowLight30">#4DFFEB3B</color>
+    <color name="bg_chat1">#70BBDD</color>
+    <color name="bg_chat2">#4480AF</color>
+</resources>

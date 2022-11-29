@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="required_permission_is_not_granted" translatable="false">Required permission is not granted!</string>
+    <string name="required_permissions_are_not_granted" translatable="false">Required permissions are not granted!</string>
+    <string name="pick_photo_rationale" translatable="false">Picking a photo from gallery needs external storage permission!</string>
+    <string name="take_photo_rationale" translatable="false">Taking a photo needs camera and external storage permissions!</string>
+    <string name="action_close" translatable="false">Close</string>
+    <string name="action_ok" translatable="false">OK</string>
+    <string name="camera" translatable="false">Take a photo</string>
+    <string name="gallery" translatable="false">Choose from gallery</string>
+    <string name="remove_photo" translatable="false">Remove current photo</string>
+    <string name="choose_photo_using" translatable="false">Choose photo using …</string>
+</resources>
