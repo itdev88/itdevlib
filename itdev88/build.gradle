@@ -2,7 +2,9 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
     id 'maven-publish'
+    id 'com.github.dcendents.android-maven'
 }
+group='com.github.itdev88'
 
 android {
     compileSdkVersion 31
@@ -71,16 +73,3 @@ dependencies {
     implementation 'com.jakewharton.threetenabp:threetenabp:1.2.1'
     implementation 'com.squareup.picasso:picasso:2.8'
 }
-
-afterEvaluate {
-        publishing {
-            publications {
-                release(MavenPublication) {
-                    from components.release
-                    groupId = 'com.github.itdev88'
-                    artifactId = 'itdevlib'
-                    version = '0.0.2'
-                }
-            }
-        }
-    }
