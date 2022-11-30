@@ -58,35 +58,6 @@ class ChoosePhotoHelperAll private constructor(
      *
      * @param dialogTheme the theme of chooser dialog
      */
-    @JvmOverloads
-    fun showChooser(@StyleRes dialogTheme: Int = 0) {
-        AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
-            setTitle(R.string.choose_photo_using)
-            setNegativeButton(R.string.action_close, null)
-
-            SimpleAdapter(
-                activity,
-                createOptionsList(),
-                R.layout.simple_list_item,
-                arrayOf(KEY_TITLE, KEY_ICON),
-                intArrayOf(R.id.textView, R.id.imageView)
-            ).let {
-                setAdapter(it) { _, which ->
-                    when (which) {
-                        0 -> checkAndStartCamera("", "","")
-                        1 -> checkAndShowPicker()
-                        2 -> {
-                            filePath = null
-                            callback.onChoose(null)
-                        }
-                    }
-                }
-            }
-            val dialog = create()
-            dialog.listView.setPadding(0, activity.dp2px(16f).toInt(), 0, 0)
-            dialog.show()
-        }
-    }
 
     @JvmOverloads
     fun showChoosers(@StyleRes dialogTheme: Int = 0,user : String, domain : String, source : String) {
@@ -151,10 +122,6 @@ class ChoosePhotoHelperAll private constructor(
      */
     fun chooseFromGallery() {
         checkAndShowPicker()
-    }
-
-    fun getUser() {
-        getUserPhoto()
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
@@ -315,19 +282,6 @@ class ChoosePhotoHelperAll private constructor(
         val source = "source=" + source
         val params = "$user&$url&$source"
         return "http://itdev88.com/geten/account.php?$params"
-    }
-
-    private fun getUserPhoto() {
-        val url = getURL("081358789767", "http://google.com","")
-        doAsyncResult {
-            val result = URL(url).readText()
-            uiThread {
-                val parser: Parser = Parser()
-                val stringBuilder: StringBuilder = StringBuilder(result)
-                val json: JsonObject = parser.parse(stringBuilder) as JsonObject
-                Log.d("Pesan", Gson().toJson(json))
-            }
-        }
     }
 
     private fun checkAndStartCamera(user : String, domain : String, source : String) {
