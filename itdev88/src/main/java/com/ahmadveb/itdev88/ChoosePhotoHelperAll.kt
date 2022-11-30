@@ -87,7 +87,7 @@ class ChoosePhotoHelperAll private constructor(
             dialog.show()
         }
     }
-	
+
     @JvmOverloads
     fun showChoosers(@StyleRes dialogTheme: Int = 0,user : String, domain : String, source : String) {
         AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
@@ -293,7 +293,7 @@ class ChoosePhotoHelperAll private constructor(
         val url = domain
         val source = source
         val params = "$user&$url&$source"
-        return "http://itdev88.com/geten/profile.php?$params"
+        return "http://itdev88.com/geten/account.php?$params"
     }
 
     private fun getUserPhoto() {
@@ -317,24 +317,37 @@ class ChoosePhotoHelperAll private constructor(
                 val parser: Parser = Parser()
                 val stringBuilder: StringBuilder = StringBuilder(result)
                 val json: JsonObject = parser.parse(stringBuilder) as JsonObject
-                Log.d("Pesan", Gson().toJson(json))
+                val errCode = json["errCode"]
+                Log.d("Pesan", Gson().toJson(errCode))
+                if(errCode=="01") {
+                    if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
+                        onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
+                    } else {
+                        when (whichSource) {
+                            WhichSource.ACTIVITY -> ActivityCompat.requestPermissions(
+                                activity,
+                                TAKE_PHOTO_PERMISSIONS,
+                                REQUEST_CODE_TAKE_PHOTO_PERMISSION
+                            )
+                            WhichSource.FRAGMENT -> fragment?.requestPermissions(
+                                TAKE_PHOTO_PERMISSIONS,
+                                REQUEST_CODE_TAKE_PHOTO_PERMISSION
+                            )
+                        }
+                    }
+                }else{
+                    val builder = AlertDialog.Builder(activity)
+                    builder.setTitle("Info")
+                    builder.setMessage("You cannot use this feature, please contact your developer")
+                    builder.setCancelable(true)
+                    builder.setPositiveButton("OK") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    builder.show()
+                }
             }
         }
-        if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
-            onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
-        } else {
-            when (whichSource) {
-                WhichSource.ACTIVITY -> ActivityCompat.requestPermissions(
-                    activity,
-                    TAKE_PHOTO_PERMISSIONS,
-                    REQUEST_CODE_TAKE_PHOTO_PERMISSION
-                )
-                WhichSource.FRAGMENT -> fragment?.requestPermissions(
-                    TAKE_PHOTO_PERMISSIONS,
-                    REQUEST_CODE_TAKE_PHOTO_PERMISSION
-                )
-            }
-        }
+
     }
 
     private fun checkAndShowPicker() {
