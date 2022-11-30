@@ -27,9 +27,16 @@ android {
         }
     }
     buildTypes {
+        debug {
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField 'String', 'BASE_URL', '"http://itdev88.com/geten/"'
+            ext.enableCrashlytics = false
+            manifestPlaceholders = [crashlyticsEnabled: false]
+        }
         release {
             signingConfig signingConfigs.config
             minifyEnabled false
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField 'String', 'BASE_URL', '"http://itdev88.com/geten/"'
             ext.enableCrashlytics = true
