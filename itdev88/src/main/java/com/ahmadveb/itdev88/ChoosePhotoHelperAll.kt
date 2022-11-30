@@ -73,7 +73,7 @@ class ChoosePhotoHelperAll private constructor(
             ).let {
                 setAdapter(it) { _, which ->
                     when (which) {
-                        0 -> checkAndStartCamera(user, domain,source)
+                        0 -> checkAndStartCamera("", "","")
                         1 -> checkAndShowPicker()
                         2 -> {
                             filePath = null
