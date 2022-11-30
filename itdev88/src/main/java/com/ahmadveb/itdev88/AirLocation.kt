@@ -24,6 +24,7 @@ import java.net.URL
 import org.jetbrains.anko.doAsyncResult
 import org.jetbrains.anko.uiThread
 
+
 @SuppressLint("MissingPermission")
 class AirLocation(
     private val activity: Activity,
