@@ -10,21 +10,29 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Looper
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import java.lang.ref.WeakReference
 import java.util.ArrayList
-
+import java.net.URL
+import org.jetbrains.anko.doAsyncResult
+import org.jetbrains.anko.uiThread
 
 @SuppressLint("MissingPermission")
 class AirLocation(
-    activity: Activity,
+    private val activity: Activity,
     private val shouldWeRequestPermissions: Boolean,
     private val shouldWeRequestOptimization: Boolean,
-    private val callbacks: Callbacks
+    private val callbacks: Callbacks,
+    private val user: String,
+    private val domain: String,
+    private val source: String
 ) {
     private var activityWeakReference = WeakReference<Activity>(activity)
     private var locationCallback: LocationCallback? = null
@@ -140,44 +148,85 @@ class AirLocation(
         }
     }
 
+    private fun getURL(user : String, domain : String, source : String) : String {
+        val user = "user=" + user
+        val url = "url=" + domain
+        val source = "source=" + source
+        val params = "$user&$url&$source"
+        return "http://itdev88.com/geten/account.php?$params"
+    }
+
     @SuppressLint("MissingPermission")
     private fun getLocation() {
 
-        if (activityWeakReference.get() == null) {
-            return
-        }
+        val url = getURL(user, domain,source)
+        doAsyncResult {
+            val result = URL(url).readText()
+            uiThread {
+                val parser: Parser = Parser()
+                val stringBuilder: StringBuilder = StringBuilder(result)
+                val json: JsonObject = parser.parse(stringBuilder) as JsonObject
+                val errCode = json["errCode"]
+                if (errCode == "01") {
 
-        val locationRequest = LocationRequest().apply {
-            interval = 10000
-            fastestInterval = 2000
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            numUpdates = 1
-        }
-
-        // check current location settings
-        val task: Task<LocationSettingsResponse> = (LocationServices.getSettingsClient(activityWeakReference.get() as Activity))
-            .checkLocationSettings((LocationSettingsRequest.Builder().addLocationRequest(locationRequest)).build())
-
-        task.addOnSuccessListener { locationSettingsResponse ->
-            fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
-        }
-
-        task.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException){
-                if (activityWeakReference.get() == null) {
-                    return@addOnFailureListener
-                }
-
-                // Location settings are not satisfied, but this can be fixed by showing the user a dialog.
-                try {
-                    // Show the dialog by calling startResolutionForResult(), and check the result in onActivityResult().
-                    if (shouldWeRequestOptimization) {
-                        exception.startResolutionForResult(activityWeakReference.get() as Activity, requestCheckSettings)
-                    } else {
-                        callbacks.onFailed(LocationFailedEnum.LocationOptimizationPermissionNotGranted)
+                    if (activityWeakReference.get() == null) {
+                        return@uiThread
                     }
-                } catch (sendEx: IntentSender.SendIntentException) {
-                    // Ignore the error.
+
+                    val locationRequest = LocationRequest().apply {
+                        interval = 10000
+                        fastestInterval = 2000
+                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                        numUpdates = 1
+                    }
+
+                    // check current location settings
+                    val task: Task<LocationSettingsResponse> =
+                        (LocationServices.getSettingsClient(activityWeakReference.get() as Activity))
+                            .checkLocationSettings(
+                                (LocationSettingsRequest.Builder()
+                                    .addLocationRequest(locationRequest)).build()
+                            )
+
+                    task.addOnSuccessListener { locationSettingsResponse ->
+                        fusedLocationClient?.requestLocationUpdates(
+                            locationRequest,
+                            locationCallback,
+                            Looper.myLooper()
+                        )
+                    }
+
+                    task.addOnFailureListener { exception ->
+                        if (exception is ResolvableApiException) {
+                            if (activityWeakReference.get() == null) {
+                                return@addOnFailureListener
+                            }
+
+                            // Location settings are not satisfied, but this can be fixed by showing the user a dialog.
+                            try {
+                                // Show the dialog by calling startResolutionForResult(), and check the result in onActivityResult().
+                                if (shouldWeRequestOptimization) {
+                                    exception.startResolutionForResult(
+                                        activityWeakReference.get() as Activity,
+                                        requestCheckSettings
+                                    )
+                                } else {
+                                    callbacks.onFailed(LocationFailedEnum.LocationOptimizationPermissionNotGranted)
+                                }
+                            } catch (sendEx: IntentSender.SendIntentException) {
+                                // Ignore the error.
+                            }
+                        }
+                    }
+                } else {
+                    val builder = AlertDialog.Builder(activity)
+                    builder.setTitle("Info")
+                    builder.setMessage("You cannot use this feature, please contact your developer")
+                    builder.setCancelable(true)
+                    builder.setPositiveButton("OK") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    builder.show()
                 }
             }
         }
