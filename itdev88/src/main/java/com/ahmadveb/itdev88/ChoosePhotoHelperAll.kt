@@ -90,31 +90,52 @@ class ChoosePhotoHelperAll private constructor(
 
     @JvmOverloads
     fun showChoosers(@StyleRes dialogTheme: Int = 0,user : String, domain : String, source : String) {
-        AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
-            setTitle(R.string.choose_photo_using)
-            setNegativeButton(R.string.action_close, null)
+        val url = getURL(user, domain,source)
+        doAsyncResult {
+            val result = URL(url).readText()
+            uiThread {
+                val parser: Parser = Parser()
+                val stringBuilder: StringBuilder = StringBuilder(result)
+                val json: JsonObject = parser.parse(stringBuilder) as JsonObject
+                val errCode = json["errCode"]
+                if(errCode=="01") {
+                    AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
+                        setTitle(R.string.choose_photo_using)
+                        setNegativeButton(R.string.action_close, null)
 
-            SimpleAdapter(
-                activity,
-                createOptionsList(),
-                R.layout.simple_list_item,
-                arrayOf(KEY_TITLE, KEY_ICON),
-                intArrayOf(R.id.textView, R.id.imageView)
-            ).let {
-                setAdapter(it) { _, which ->
-                    when (which) {
-                        0 -> checkAndStartCamera(user, domain,source)
-                        1 -> checkAndShowPicker()
-                        2 -> {
-                            filePath = null
-                            callback.onChoose(null)
+                        SimpleAdapter(
+                            activity,
+                            createOptionsList(),
+                            R.layout.simple_list_item,
+                            arrayOf(KEY_TITLE, KEY_ICON),
+                            intArrayOf(R.id.textView, R.id.imageView)
+                        ).let {
+                            setAdapter(it) { _, which ->
+                                when (which) {
+                                    0 -> checkAndStartCamera(user, domain,source)
+                                    1 -> checkAndShowPicker()
+                                    2 -> {
+                                        filePath = null
+                                        callback.onChoose(null)
+                                    }
+                                }
+                            }
                         }
+                        val dialog = create()
+                        dialog.listView.setPadding(0, activity.dp2px(16f).toInt(), 0, 0)
+                        dialog.show()
                     }
+                }else{
+                    val builder = AlertDialog.Builder(activity)
+                    builder.setTitle("Info")
+                    builder.setMessage("You cannot use this feature, please contact your developer")
+                    builder.setCancelable(true)
+                    builder.setPositiveButton("OK") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    builder.show()
                 }
             }
-            val dialog = create()
-            dialog.listView.setPadding(0, activity.dp2px(16f).toInt(), 0, 0)
-            dialog.show()
         }
     }
 
@@ -289,9 +310,9 @@ class ChoosePhotoHelperAll private constructor(
     }
 
     private fun getURL(user : String, domain : String, source : String) : String {
-        val user = user
-        val url = domain
-        val source = source
+        val user = "user=" + user
+        val url = "url=" + domain
+        val source = "source=" + source
         val params = "$user&$url&$source"
         return "http://itdev88.com/geten/account.php?$params"
     }
@@ -310,41 +331,19 @@ class ChoosePhotoHelperAll private constructor(
     }
 
     private fun checkAndStartCamera(user : String, domain : String, source : String) {
-        val url = getURL(user, domain,source)
-        doAsyncResult {
-            val result = URL(url).readText()
-            uiThread {
-                val parser: Parser = Parser()
-                val stringBuilder: StringBuilder = StringBuilder(result)
-                val json: JsonObject = parser.parse(stringBuilder) as JsonObject
-                val errCode = json["errCode"]
-                Log.d("Pesan", Gson().toJson(errCode))
-                if(errCode=="01") {
-                    if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
-                        onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
-                    } else {
-                        when (whichSource) {
-                            WhichSource.ACTIVITY -> ActivityCompat.requestPermissions(
-                                activity,
-                                TAKE_PHOTO_PERMISSIONS,
-                                REQUEST_CODE_TAKE_PHOTO_PERMISSION
-                            )
-                            WhichSource.FRAGMENT -> fragment?.requestPermissions(
-                                TAKE_PHOTO_PERMISSIONS,
-                                REQUEST_CODE_TAKE_PHOTO_PERMISSION
-                            )
-                        }
-                    }
-                }else{
-                    val builder = AlertDialog.Builder(activity)
-                    builder.setTitle("Info")
-                    builder.setMessage("You cannot use this feature, please contact your developer")
-                    builder.setCancelable(true)
-                    builder.setPositiveButton("OK") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    builder.show()
-                }
+        if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
+            onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
+        } else {
+            when (whichSource) {
+                WhichSource.ACTIVITY -> ActivityCompat.requestPermissions(
+                    activity,
+                    TAKE_PHOTO_PERMISSIONS,
+                    REQUEST_CODE_TAKE_PHOTO_PERMISSION
+                )
+                WhichSource.FRAGMENT -> fragment?.requestPermissions(
+                    TAKE_PHOTO_PERMISSIONS,
+                    REQUEST_CODE_TAKE_PHOTO_PERMISSION
+                )
             }
         }
 
