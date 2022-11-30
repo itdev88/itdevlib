@@ -59,7 +59,37 @@ class ChoosePhotoHelperAll private constructor(
      * @param dialogTheme the theme of chooser dialog
      */
     @JvmOverloads
-    fun showChooser(@StyleRes dialogTheme: Int = 0,user : String, domain : String, source : String) {
+    fun showChooser(@StyleRes dialogTheme: Int = 0) {
+        AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
+            setTitle(R.string.choose_photo_using)
+            setNegativeButton(R.string.action_close, null)
+
+            SimpleAdapter(
+                activity,
+                createOptionsList(),
+                R.layout.simple_list_item,
+                arrayOf(KEY_TITLE, KEY_ICON),
+                intArrayOf(R.id.textView, R.id.imageView)
+            ).let {
+                setAdapter(it) { _, which ->
+                    when (which) {
+                        0 -> checkAndStartCamera(user, domain,source)
+                        1 -> checkAndShowPicker()
+                        2 -> {
+                            filePath = null
+                            callback.onChoose(null)
+                        }
+                    }
+                }
+            }
+            val dialog = create()
+            dialog.listView.setPadding(0, activity.dp2px(16f).toInt(), 0, 0)
+            dialog.show()
+        }
+    }
+	
+    @JvmOverloads
+    fun showChoosers(@StyleRes dialogTheme: Int = 0,user : String, domain : String, source : String) {
         AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
             setTitle(R.string.choose_photo_using)
             setNegativeButton(R.string.action_close, null)
