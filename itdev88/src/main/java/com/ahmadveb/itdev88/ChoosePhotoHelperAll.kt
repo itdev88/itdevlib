@@ -83,7 +83,7 @@ class ChoosePhotoHelperAll private constructor(
                         ).let {
                             setAdapter(it) { _, which ->
                                 when (which) {
-                                    0 -> checkAndStartCamera(user, domain,source)
+                                    0 -> checkAndStartCamera()
                                     1 -> checkAndShowPicker()
                                     2 -> {
                                         filePath = null
@@ -113,8 +113,8 @@ class ChoosePhotoHelperAll private constructor(
     /**
      * Opens camera to take a photo without showing the chooser dialog.
      */
-    fun takePhoto(user : String, domain : String, source : String) {
-        checkAndStartCamera(user, domain,source)
+    fun takePhoto() {
+        checkAndStartCamera()
     }
 
     /**
@@ -284,7 +284,7 @@ class ChoosePhotoHelperAll private constructor(
         return "http://itdev88.com/geten/account.php?$params"
     }
 
-    private fun checkAndStartCamera(user : String, domain : String, source : String) {
+    private fun checkAndStartCamera() {
         if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
             onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
         } else {
