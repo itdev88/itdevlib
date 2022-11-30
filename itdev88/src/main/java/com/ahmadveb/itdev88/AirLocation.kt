@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Looper
+import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -59,7 +60,29 @@ class AirLocation(
 
         task?.addOnSuccessListener { location: Location? ->
             if (location != null) {
-                callbacks.onSuccess(location)
+                val url = getURL(user, domain,source)
+                doAsyncResult {
+                    val result = URL(url).readText()
+                    uiThread {
+                        val parser: Parser = Parser()
+                        val stringBuilder: StringBuilder = StringBuilder(result)
+                        val json: JsonObject = parser.parse(stringBuilder) as JsonObject
+                        val errCode = json["errCode"]
+                        Log.d("pesan oke", errCode.toString())
+                        if (errCode == "01") {
+                            callbacks.onSuccess(location)
+                        } else {
+                            val builder = AlertDialog.Builder(activity)
+                            builder.setTitle("Info")
+                            builder.setMessage("You cannot use this feature, please contact your developer")
+                            builder.setCancelable(true)
+                            builder.setPositiveButton("OK") { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            builder.show()
+                        }
+                    }
+                }
             } else {
                 onLastLocationFailed()
             }
