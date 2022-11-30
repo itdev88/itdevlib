@@ -18,6 +18,7 @@ import com.google.android.gms.tasks.Task
 import java.lang.ref.WeakReference
 import java.util.ArrayList
 
+
 @SuppressLint("MissingPermission")
 class AirLocation(
     activity: Activity,
