@@ -12,6 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.android.gms.location.*
 import com.ahmadveb.itdev88.helpers.*
+import mumayank.com.airpermissions.AirPermissions
 import java.io.Serializable
 import java.lang.ref.WeakReference
 
