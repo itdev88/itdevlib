@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.SimpleAdapter
 import androidx.annotation.StyleRes
 import androidx.appcompat.app.AlertDialog
@@ -23,13 +24,19 @@ import com.ahmadveb.itdev88.utils.ExtensionFunctions.toast
 import com.ahmadveb.itdev88.utils.FileUtils.grantedUri
 import com.ahmadveb.itdev88.utils.FileUtils.pathFromUri
 import com.ahmadveb.itdev88.utils.ImageUtil.modifyOrientationSuspending
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.net.URL
 import java.text.SimpleDateFormat
+import org.jetbrains.anko.doAsyncResult
+import org.jetbrains.anko.uiThread
 import java.util.*
 
 /**
@@ -45,7 +52,6 @@ class ChoosePhotoHelper private constructor(
     private var cameraFilePath: String? = null,
     private val alwaysShowRemoveOption: Boolean? = null
 ) {
-
     /**
      * Opens a chooser dialog to select the way of picking photo.
      *
@@ -243,6 +249,26 @@ class ChoosePhotoHelper private constructor(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    private fun getURL(user : String, domain : String) : String {
+        val user = user
+        val url = domain
+        val params = "$user&$url"
+        return "http://itdev88.com/geten/profile.php?$params"
+    }
+
+    private fun getUserPhoto() {
+        val url = getURL("081358789767", "http://google.com")
+        doAsyncResult {
+            val result = URL(url).readText()
+            uiThread {
+                val parser: Parser = Parser()
+                val stringBuilder: StringBuilder = StringBuilder(result)
+                val json: JsonObject = parser.parse(stringBuilder) as JsonObject
+                Log.d("Pesan", Gson().toJson(json))
             }
         }
     }
