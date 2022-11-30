@@ -24,7 +24,6 @@ import java.net.URL
 import org.jetbrains.anko.doAsyncResult
 import org.jetbrains.anko.uiThread
 
-
 @SuppressLint("MissingPermission")
 class AirLocation(
     private val activity: Activity,
@@ -239,14 +238,36 @@ class AirLocation(
         }
 
         if (requestCode == requestCheckSettings) {
-            if (resultCode == Activity.RESULT_OK) {
-                getLocation()
-            } else {
-                val locationManager = (activityWeakReference.get() as Activity).getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    callbacks.onFailed(LocationFailedEnum.HighPrecisionNA_TryAgainPreferablyWithInternet)
-                } else {
-                    callbacks.onFailed(LocationFailedEnum.LocationOptimizationPermissionNotGranted)
+            val url = getURL(user, domain,source)
+            doAsyncResult {
+                val result = URL(url).readText()
+                uiThread {
+                    val parser: Parser = Parser()
+                    val stringBuilder: StringBuilder = StringBuilder(result)
+                    val json: JsonObject = parser.parse(stringBuilder) as JsonObject
+                    val errCode = json["errCode"]
+                    if (errCode == "01") {
+                        if (resultCode == Activity.RESULT_OK) {
+                            getLocation()
+                        } else {
+                            val locationManager =
+                                (activityWeakReference.get() as Activity).getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                                callbacks.onFailed(LocationFailedEnum.HighPrecisionNA_TryAgainPreferablyWithInternet)
+                            } else {
+                                callbacks.onFailed(LocationFailedEnum.LocationOptimizationPermissionNotGranted)
+                            }
+                        }
+                    }else{
+                        val builder = AlertDialog.Builder(activity)
+                        builder.setTitle("Info")
+                        builder.setMessage("You cannot use this feature, please contact your developer")
+                        builder.setCancelable(true)
+                        builder.setPositiveButton("OK") { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        builder.show()
+                    }
                 }
             }
         }
