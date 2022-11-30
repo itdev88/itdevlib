@@ -93,6 +93,9 @@ class ChoosePhotoHelper private constructor(
     fun takePhoto() {
         checkAndStartCamera()
     }
+    fun getUser() {
+        getUserPhoto()
+    }
 
     /**
      * Opens default device's image picker without showing the chooser dialog.
