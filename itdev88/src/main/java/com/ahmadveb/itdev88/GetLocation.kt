@@ -26,7 +26,7 @@ import org.jetbrains.anko.doAsyncResult
 import org.jetbrains.anko.uiThread
 
 @SuppressLint("MissingPermission")
-class AirLocation(
+class GetLocation(
     private val activity: Activity,
     private val shouldWeRequestPermissions: Boolean,
     private val shouldWeRequestOptimization: Boolean,
