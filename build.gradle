@@ -22,7 +22,10 @@ allprojects {
         google()
         mavenCentral()
         jcenter() // Warning: this repository is going to shut down soon
-        maven { url "https://jitpack.io" }
+        maven {
+            url "https://jitpack.io"
+            credentials { username 'jp_sst66843i1m7a8go052o03dr4p' }
+        }
     }
 }
 
