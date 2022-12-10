@@ -4,15 +4,12 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.net.Uri
 import android.provider.Settings
 import android.text.InputFilter
 import android.text.Spanned
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import com.ahmadveb.itdev88.MyApplication
-import com.ahmadveb.itdev88.R
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -73,8 +70,6 @@ object Grather {
             separateName[0][0].toString().toUpperCase()
         }
     }
-
-// class to decimal digits input filter
 
     class DecimalDigitsInputFilter(
         maxDigitsIncludingPoint: Int, maxDecimalPlaces: Int
@@ -147,14 +142,6 @@ object Grather {
             view = View(activity)
         }
         imm?.hideSoftInputFromWindow(view.windowToken, 0)
-    }
-
-    @Suppress("DEPRECATION")
-    fun isNetworkAvailable(): Boolean {
-        val connectivityManager: ConnectivityManager =
-            MyApplication.applicationContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val activeNetworkInfo = connectivityManager.activeNetworkInfo
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected
     }
 
     fun isEmailValid(email: String): Boolean {
