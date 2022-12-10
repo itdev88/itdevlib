@@ -1,13 +1,11 @@
 package com.ahmadveb.itdev88.base
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 import com.ahmadveb.itdev88.R
 import com.ahmadveb.itdev88.ui.ext.toast
-import com.ahmadveb.itdev88.utils.ExtensionFunctions.toast
-import com.ahmadveb.itdev88.utils.Helper
+import com.ahmadveb.itdev88.utils.Grather
 
 abstract class BaseActivity<P : BasePresenter<V>, V : BaseViewImpl> : AppCompatActivity() {
 
@@ -83,7 +81,7 @@ abstract class BaseActivity<P : BasePresenter<V>, V : BaseViewImpl> : AppCompatA
     }
 
     fun hideKeyboard() {
-        Helper.hideKeyboard(this)
+        Grather.hideKeyboard(this)
     }
 
 

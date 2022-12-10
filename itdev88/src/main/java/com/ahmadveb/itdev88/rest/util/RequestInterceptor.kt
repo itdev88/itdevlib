@@ -1,8 +1,6 @@
 package com.ahmadveb.itdev88.rest.util
 
-import com.ahmadveb.itdev88.BuildConfig
-import com.ahmadveb.itdev88.MyApplication
-import com.ahmadveb.itdev88.utils.Helper
+import com.ahmadveb.itdev88.utils.Grather
 import com.ahmadveb.itdev88.utils.Signature
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -14,7 +12,7 @@ class RequestInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
 
-        if (!Helper.isNetworkAvailable()) {
+        if (!Grather.isNetworkAvailable()) {
             val maxStale = 60 * 60 * 24 * 7
             request = request
                 .newBuilder()

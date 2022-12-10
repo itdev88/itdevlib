@@ -1,6 +1,5 @@
 package com.ahmadveb.itdev88.base
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.ahmadveb.itdev88.R
 import com.ahmadveb.itdev88.ui.ext.toast
-import com.ahmadveb.itdev88.utils.Helper
+import com.ahmadveb.itdev88.utils.Grather
 
 @Suppress("UNCHECKED_CAST")
 abstract class BaseFragment<P : BasePresenter<V>, V: BaseViewImpl> : Fragment() {
@@ -86,7 +85,7 @@ abstract class BaseFragment<P : BasePresenter<V>, V: BaseViewImpl> : Fragment() 
     }
 
     fun hideKeyboard() {
-        Helper.hideKeyboard(activity!!)
+        Grather.hideKeyboard(activity!!)
     }
 
 }
