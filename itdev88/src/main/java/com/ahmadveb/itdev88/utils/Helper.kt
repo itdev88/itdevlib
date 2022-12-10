@@ -30,25 +30,6 @@ import java.util.regex.Pattern
 object Helper {
 
 
-    fun getIdLocale(context: Context): Locale {
-        return Locale(
-            context.getString(R.string.id_lang),
-            context.getString(R.string.id_country)
-        )
-    }
-    @Throws(ParseException::class)
-    fun getDateFormat(context: Context, date: String, formatFrom: String, formatTo: String): String {
-        try {
-            val sdfBefore = SimpleDateFormat(formatFrom, getIdLocale(context))
-            val dateBefore = sdfBefore.parse(date)
-            val sdfAfter = SimpleDateFormat(formatTo, getIdLocale(context))
-            return sdfAfter.format(dateBefore!!)
-        }catch (ex:Exception) {
-            return date
-        }
-    }
-
-
     @SuppressLint("SimpleDateFormat")
     fun getAbbreviatedFromDateTime(dateTime: String, dateFormat: String, field: String): String? {
         val input = SimpleDateFormat(dateFormat)
@@ -92,14 +73,6 @@ object Helper {
             separateName[0][0].toString().toUpperCase()
         }
     }
-    @Throws(ParseException::class)
-    fun getDateFormat(context: Context, date: Date, formatTo: String): String {
-        val sdfAfter = SimpleDateFormat(formatTo, getIdLocale(context))
-        //        SimpleDateFormat sdfAfter = new SimpleDateFormat(formatTo, Locale.getDefault());
-        return sdfAfter.format(date)
-    }
-
-
 
 // class to decimal digits input filter
 
