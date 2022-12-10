@@ -10,4 +10,6 @@
     <string name="gallery" translatable="false">Choose from gallery</string>
     <string name="remove_photo" translatable="false">Remove current photo</string>
     <string name="choose_photo_using" translatable="false">Choose photo using …</string>
+    <string name="id_lang">en</string>
+    <string name="id_country">EN</string>>
 </resources>

@@ -30,6 +30,25 @@ import java.util.regex.Pattern
 object Helper {
 
 
+    fun getIdLocale(context: Context): Locale {
+        return Locale(
+            context.getString(R.string.id_lang),
+            context.getString(R.string.id_country)
+        )
+    }
+    @Throws(ParseException::class)
+    fun getDateFormat(context: Context, date: String, formatFrom: String, formatTo: String): String {
+        try {
+            val sdfBefore = SimpleDateFormat(formatFrom, getIdLocale(context))
+            val dateBefore = sdfBefore.parse(date)
+            val sdfAfter = SimpleDateFormat(formatTo, getIdLocale(context))
+            return sdfAfter.format(dateBefore!!)
+        }catch (ex:Exception) {
+            return date
+        }
+    }
+
+
     @SuppressLint("SimpleDateFormat")
     fun getAbbreviatedFromDateTime(dateTime: String, dateFormat: String, field: String): String? {
         val input = SimpleDateFormat(dateFormat)
@@ -57,6 +76,27 @@ object Helper {
         } else {
             separateName[0][0].toString().toUpperCase()
         }
+    }
+
+    @SuppressLint("DefaultLocale")
+    fun getInisialNameDot(name: String?): String {
+        var fullName: String? = name ?: return ""
+        fullName = fullName!!.trim { it <= '.' }
+        val separateName = fullName.split("\\s+".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        if (separateName.isEmpty()) {
+            return ""
+        }
+        return if (separateName.size > 1) {
+            separateName[0][0] + "" + separateName[1][0]
+        } else {
+            separateName[0][0].toString().toUpperCase()
+        }
+    }
+    @Throws(ParseException::class)
+    fun getDateFormat(context: Context, date: Date, formatTo: String): String {
+        val sdfAfter = SimpleDateFormat(formatTo, getIdLocale(context))
+        //        SimpleDateFormat sdfAfter = new SimpleDateFormat(formatTo, Locale.getDefault());
+        return sdfAfter.format(date)
     }
 
 
