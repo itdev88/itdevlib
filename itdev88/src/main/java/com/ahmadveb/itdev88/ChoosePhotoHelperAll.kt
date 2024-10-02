@@ -24,6 +24,7 @@ import com.ahmadveb.itdev88.utils.ExtensionFunctions.toast
 import com.ahmadveb.itdev88.utils.FileUtils.grantedUri
 import com.ahmadveb.itdev88.utils.FileUtils.pathFromUri
 import com.ahmadveb.itdev88.utils.ImageUtil.modifyOrientationSuspending
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -215,7 +216,7 @@ class ChoosePhotoHelperAll private constructor(
     }
 
     private fun checkAndStartCamera() {
-        if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
+        if (hasPermissions(*TAKE_PHOTO_PERMISSIONS)) {
             onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
         } else {
             requestPermissions(TAKE_PHOTO_PERMISSIONS, REQUEST_CODE_TAKE_PHOTO_PERMISSION)
@@ -223,7 +224,7 @@ class ChoosePhotoHelperAll private constructor(
     }
 
     private fun checkAndShowPicker() {
-        if (hasPermissions(activity, *PICK_PHOTO_PERMISSIONS)) {
+        if (hasPermissions(*PICK_PHOTO_PERMISSIONS)) {
             onPermissionsGranted(REQUEST_CODE_PICK_PHOTO_PERMISSION)
         } else {
             requestPermissions(PICK_PHOTO_PERMISSIONS, REQUEST_CODE_PICK_PHOTO_PERMISSION)
@@ -245,6 +246,19 @@ class ChoosePhotoHelperAll private constructor(
             setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
             show()
         }
+    }
+
+    private fun hasPermissions(vararg permissions: String): Boolean {
+        permissions.forEach {
+            if (ContextCompat.checkSelfPermission(activity, it) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun parseJson(jsonString: String): Map<String, Any> {
+        return Gson().fromJson(jsonString, Map::class.java) as Map<String, Any>
     }
 
     enum class OutputType {
