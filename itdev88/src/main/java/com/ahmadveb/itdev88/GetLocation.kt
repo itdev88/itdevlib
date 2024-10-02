@@ -1,5 +1,3 @@
-package com.ahmadveb.itdev88
-
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -19,11 +17,12 @@ import com.beust.klaxon.Parser
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
-import java.util.ArrayList
 import java.net.URL
-import org.jetbrains.anko.doAsyncResult
-import org.jetbrains.anko.uiThread
 
 @SuppressLint("MissingPermission")
 class GetLocation(
@@ -54,33 +53,28 @@ class GetLocation(
     }
 
     init {
-        // First try to get last available location, if it matches our precision level
         fusedLocationClient = activity.let { LocationServices.getFusedLocationProviderClient(it) }
         val task = fusedLocationClient?.lastLocation
 
         task?.addOnSuccessListener { location: Location? ->
             if (location != null) {
-                val url = getURL(user, domain,source)
-                doAsyncResult {
-                    val result = URL(url).readText()
-                    uiThread {
-                        val parser: Parser = Parser()
-                        val stringBuilder: StringBuilder = StringBuilder(result)
-                        val json: JsonObject = parser.parse(stringBuilder) as JsonObject
-                        val errCode = json["errCode"]
-                        Log.d("pesan oke", errCode.toString())
-                        if (errCode == "01") {
-                            callbacks.onSuccess(location)
-                        } else {
-                            val builder = AlertDialog.Builder(activity)
-                            builder.setTitle("Info")
-                            builder.setMessage("You cannot use this feature, please contact your developer")
-                            builder.setCancelable(true)
-                            builder.setPositiveButton("OK") { dialog, _ ->
-                                dialog.dismiss()
+                val url = getURL(user, domain, source)
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val result = URL(url).readText()
+                        withContext(Dispatchers.Main) {
+                            val parser: Parser = Parser.default()
+                            val json = parser.parse(StringBuilder(result)) as JsonObject
+                            val errCode = json["errCode"]
+                            Log.d("pesan oke", errCode.toString())
+                            if (errCode == "01") {
+                                callbacks.onSuccess(location)
+                            } else {
+                                showAlertDialog("You cannot use this feature, please contact your developer")
                             }
-                            builder.show()
                         }
+                    } catch (e: Exception) {
+                        Log.e("GetLocation", "Error fetching URL", e)
                     }
                 }
             } else {
@@ -93,25 +87,22 @@ class GetLocation(
     }
 
     private fun onLastLocationFailed() {
-        // define location callback now
         locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
+            override fun onLocationResult(locationResult: LocationResult) {
                 locationResult ?: return
                 callbacks.onSuccess(locationResult.lastLocation)
                 fusedLocationClient?.removeLocationUpdates(locationCallback)
             }
 
-            @SuppressLint("MissingPermission")
-            override fun onLocationAvailability(locationAvailability: LocationAvailability?) {
+            override fun onLocationAvailability(locationAvailability: LocationAvailability) {
                 super.onLocationAvailability(locationAvailability)
-                if (locationAvailability?.isLocationAvailable == false) {
+                if (!locationAvailability.isLocationAvailable) {
                     callbacks.onFailed(LocationFailedEnum.HighPrecisionNA_TryAgainPreferablyWithInternet)
                     fusedLocationClient?.removeLocationUpdates(locationCallback)
                 }
             }
         }
 
-        // check flight mode
         if (activityWeakReference.get() == null) {
             return
         }
@@ -119,22 +110,21 @@ class GetLocation(
         if (NetworkUtil.isInFlightMode(activityWeakReference.get() as Activity)) {
             callbacks.onFailed(LocationFailedEnum.DeviceInFlightMode)
         } else {
-            // check location permissions
-            val permissions = ArrayList<String>()
-            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
-            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-            var permissionGranted = true
-            for (permission in permissions) {
-                if (ContextCompat.checkSelfPermission(activityWeakReference.get() as Activity, permission) != PackageManager.PERMISSION_GRANTED) {
-                    permissionGranted = false
-                    break
-                }
+            val permissions = arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+            var permissionGranted = permissions.all {
+                ContextCompat.checkSelfPermission(activityWeakReference.get() as Activity, it) == PackageManager.PERMISSION_GRANTED
             }
-            if (permissionGranted == false) {
-                // request permissions as not present
+
+            if (!permissionGranted) {
                 if (shouldWeRequestPermissions) {
-                    val permissionsArgs = permissions.toTypedArray()
-                    ActivityCompat.requestPermissions(activityWeakReference.get() as Activity, permissionsArgs, requestLocation)
+                    ActivityCompat.requestPermissions(
+                        activityWeakReference.get() as Activity,
+                        permissions,
+                        requestLocation
+                    )
                 } else {
                     callbacks.onFailed(LocationFailedEnum.LocationPermissionNotGranted)
                 }
@@ -145,112 +135,84 @@ class GetLocation(
     }
 
     fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-
         if (activityWeakReference.get() == null) {
             return
         }
 
         if (requestCode == requestLocation) {
-            if (grantResults.isEmpty()) {
+            if (grantResults.isEmpty() || grantResults.any { it != PackageManager.PERMISSION_GRANTED }) {
                 callbacks.onFailed(LocationFailedEnum.LocationPermissionNotGranted)
-                return
-            }
-
-            var granted = true
-            for (grantResult in grantResults) {
-                if (grantResult != PackageManager.PERMISSION_GRANTED) {
-                    granted = false
-                    break
-                }
-            }
-            if (granted) {
-                getLocation()
             } else {
-                callbacks.onFailed(LocationFailedEnum.LocationPermissionNotGranted)
+                getLocation()
             }
         }
     }
 
-    private fun getURL(user : String, domain : String, source : String) : String {
-        val user = "user=" + user
-        val url = "url=" + domain
-        val source = "source=" + source
-        val params = "$user&$url&$source"
+    private fun getURL(user: String, domain: String, source: String): String {
+        val params = "user=$user&url=$domain&source=$source"
         return "http://itdev88.com/geten/account.php?$params"
     }
 
     @SuppressLint("MissingPermission")
     private fun getLocation() {
+        val url = getURL(user, domain, source)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val result = URL(url).readText()
+                withContext(Dispatchers.Main) {
+                    val parser: Parser = Parser.default()
+                    val json = parser.parse(StringBuilder(result)) as JsonObject
+                    val errCode = json["errCode"]
 
-        val url = getURL(user, domain,source)
-        doAsyncResult {
-            val result = URL(url).readText()
-            uiThread {
-                val parser: Parser = Parser()
-                val stringBuilder: StringBuilder = StringBuilder(result)
-                val json: JsonObject = parser.parse(stringBuilder) as JsonObject
-                val errCode = json["errCode"]
-                if (errCode == "01") {
+                    if (errCode == "01") {
+                        if (activityWeakReference.get() == null) return@withContext
 
-                    if (activityWeakReference.get() == null) {
-                        return@uiThread
-                    }
+                        val locationRequest = LocationRequest().apply {
+                            interval = 10000
+                            fastestInterval = 2000
+                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                            numUpdates = 1
+                        }
 
-                    val locationRequest = LocationRequest().apply {
-                        interval = 10000
-                        fastestInterval = 2000
-                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                        numUpdates = 1
-                    }
+                        val task: Task<LocationSettingsResponse> =
+                            LocationServices.getSettingsClient(activityWeakReference.get() as Activity)
+                                .checkLocationSettings(
+                                    LocationSettingsRequest.Builder()
+                                        .addLocationRequest(locationRequest).build()
+                                )
 
-                    // check current location settings
-                    val task: Task<LocationSettingsResponse> =
-                        (LocationServices.getSettingsClient(activityWeakReference.get() as Activity))
-                            .checkLocationSettings(
-                                (LocationSettingsRequest.Builder()
-                                    .addLocationRequest(locationRequest)).build()
+                        task.addOnSuccessListener {
+                            fusedLocationClient?.requestLocationUpdates(
+                                locationRequest,
+                                locationCallback,
+                                Looper.myLooper()
                             )
+                        }
 
-                    task.addOnSuccessListener { locationSettingsResponse ->
-                        fusedLocationClient?.requestLocationUpdates(
-                            locationRequest,
-                            locationCallback,
-                            Looper.myLooper()
-                        )
-                    }
+                        task.addOnFailureListener { exception ->
+                            if (exception is ResolvableApiException) {
+                                if (activityWeakReference.get() == null) return@addOnFailureListener
 
-                    task.addOnFailureListener { exception ->
-                        if (exception is ResolvableApiException) {
-                            if (activityWeakReference.get() == null) {
-                                return@addOnFailureListener
-                            }
-
-                            // Location settings are not satisfied, but this can be fixed by showing the user a dialog.
-                            try {
-                                // Show the dialog by calling startResolutionForResult(), and check the result in onActivityResult().
                                 if (shouldWeRequestOptimization) {
-                                    exception.startResolutionForResult(
-                                        activityWeakReference.get() as Activity,
-                                        requestCheckSettings
-                                    )
+                                    try {
+                                        exception.startResolutionForResult(
+                                            activityWeakReference.get() as Activity,
+                                            requestCheckSettings
+                                        )
+                                    } catch (sendEx: IntentSender.SendIntentException) {
+                                        // Ignore the error.
+                                    }
                                 } else {
                                     callbacks.onFailed(LocationFailedEnum.LocationOptimizationPermissionNotGranted)
                                 }
-                            } catch (sendEx: IntentSender.SendIntentException) {
-                                // Ignore the error.
                             }
                         }
+                    } else {
+                        showAlertDialog("You cannot use this feature, please contact your developer")
                     }
-                } else {
-                    val builder = AlertDialog.Builder(activity)
-                    builder.setTitle("Info")
-                    builder.setMessage("You cannot use this feature, please contact your developer")
-                    builder.setCancelable(true)
-                    builder.setPositiveButton("OK") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    builder.show()
                 }
+            } catch (e: Exception) {
+                Log.e("GetLocation", "Error fetching URL", e)
             }
         }
     }
@@ -261,39 +223,48 @@ class GetLocation(
         }
 
         if (requestCode == requestCheckSettings) {
-            val url = getURL(user, domain,source)
-            doAsyncResult {
-                val result = URL(url).readText()
-                uiThread {
-                    val parser: Parser = Parser()
-                    val stringBuilder: StringBuilder = StringBuilder(result)
-                    val json: JsonObject = parser.parse(stringBuilder) as JsonObject
-                    val errCode = json["errCode"]
-                    if (errCode == "01") {
-                        if (resultCode == Activity.RESULT_OK) {
-                            getLocation()
-                        } else {
-                            val locationManager =
-                                (activityWeakReference.get() as Activity).getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                                callbacks.onFailed(LocationFailedEnum.HighPrecisionNA_TryAgainPreferablyWithInternet)
+            val url = getURL(user, domain, source)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val result = URL(url).readText()
+                    withContext(Dispatchers.Main) {
+                        val parser: Parser = Parser.default()
+                        val json = parser.parse(StringBuilder(result)) as JsonObject
+                        val errCode = json["errCode"]
+
+                        if (errCode == "01") {
+                            if (resultCode == Activity.RESULT_OK) {
+                                getLocation()
                             } else {
-                                callbacks.onFailed(LocationFailedEnum.LocationOptimizationPermissionNotGranted)
+                                val locationManager = activityWeakReference.get()?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                                    callbacks.onFailed(LocationFailedEnum.HighPrecisionNA_TryAgainPreferablyWithInternet)
+                                } else {
+                                    callbacks.onFailed(LocationFailedEnum.LocationOptimizationPermissionNotGranted)
+                                }
                             }
+                        } else {
+                            showAlertDialog("You cannot use this feature, please contact your developer")
                         }
-                    }else{
-                        val builder = AlertDialog.Builder(activity)
-                        builder.setTitle("Info")
-                        builder.setMessage("You cannot use this feature, please contact your developer")
-                        builder.setCancelable(true)
-                        builder.setPositiveButton("OK") { dialog, _ ->
-                            dialog.dismiss()
-                        }
-                        builder.show()
                     }
+                } catch (e: Exception) {
+                    Log.e("GetLocation", "Error fetching URL", e)
                 }
             }
         }
     }
 
+    private fun showAlertDialog(message: String) {
+        activityWeakReference.get()?.let {
+            AlertDialog.Builder(it).apply {
+                setTitle("Info")
+                setMessage(message)
+                setCancelable(true)
+                setPositiveButton("OK") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                show()
+            }
+        }
+    }
 }
