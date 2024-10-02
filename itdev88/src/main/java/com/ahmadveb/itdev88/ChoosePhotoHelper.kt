@@ -14,6 +14,7 @@ import android.util.Log
 import android.widget.SimpleAdapter
 import androidx.annotation.StyleRes
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.ahmadveb.itdev88.callback.ChoosePhotoCallback
@@ -53,8 +54,8 @@ class ChoosePhotoHelper private constructor(
                 val result = URL(url).readText()
                 withContext(Dispatchers.Main) {
                     val parser = Gson()
-                    val json = parser.fromJson(result, JsonObject::class.java)
-                    val errCode = json["errCode"]
+                    val json = parser.fromJson(result, Map::class.java) as Map<String, Any>
+                    val errCode = json["errCode"]?.toString()
                     if (errCode == "01") {
                         AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
                             setTitle(R.string.choose_photo_using)
@@ -247,6 +248,12 @@ class ChoosePhotoHelper private constructor(
         }
     }
 
+    private fun hasPermissions(context: Activity, vararg permissions: String): Boolean {
+        return permissions.all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
     enum class OutputType {
         FILE_PATH,
         URI,
@@ -283,4 +290,64 @@ class ChoosePhotoHelper private constructor(
         fun with(fragment: Fragment): RequestBuilder =
             RequestBuilder(fragment = fragment, which = WhichSource.FRAGMENT)
     }
+
+    class RequestBuilder(
+        private val activity: Activity? = null,
+        private val fragment: Fragment? = null,
+        private val which: WhichSource
+    ) {
+        fun asFilePath(): FilePathRequestBuilder {
+            return FilePathRequestBuilder(activity, fragment, which)
+        }
+
+        fun asUri(): UriRequestBuilder {
+            return UriRequestBuilder(activity, fragment, which)
+        }
+
+        fun asBitmap(): BitmapRequestBuilder {
+            return BitmapRequestBuilder(activity, fragment, which)
+        }
+    }
+
+    abstract class BaseRequestBuilder<T> internal constructor(
+        private val activity: Activity?,
+        private val fragment: Fragment?,
+        private val which: WhichSource,
+        private val outputType: OutputType
+    ) {
+        private var filePath: String? = null
+        private var cameraFilePath: String? = null
+        private var alwaysShowRemoveOption: Boolean? = null
+
+        fun build(callback: ChoosePhotoCallback<T>): ChoosePhotoHelper {
+            return ChoosePhotoHelper(
+                activity!!,
+                fragment,
+                which,
+                outputType,
+                callback,
+                filePath,
+                cameraFilePath,
+                alwaysShowRemoveOption
+            )
+        }
+    }
+
+    class FilePathRequestBuilder internal constructor(
+        activity: Activity?,
+        fragment: Fragment?,
+        which: WhichSource
+    ) : BaseRequestBuilder<String>(activity, fragment, which, OutputType.FILE_PATH)
+
+    class UriRequestBuilder internal constructor(
+        activity: Activity?,
+        fragment: Fragment?,
+        which: WhichSource
+    ) : BaseRequestBuilder<Uri>(activity, fragment, which, OutputType.URI)
+
+    class BitmapRequestBuilder internal constructor(
+        activity: Activity?,
+        fragment: Fragment?,
+        which: WhichSource
+    ) : BaseRequestBuilder<Bitmap>(activity, fragment, which, OutputType.BITMAP)
 }
