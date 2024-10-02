@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -107,21 +108,21 @@ class GetLocation(
             return
         }
 
-        if (NetworkUtil.isInFlightMode(activityWeakReference.get() as Activity)) {
+        if (isInFlightMode(activityWeakReference.get()!!)) {
             callbacks.onFailed(LocationFailedEnum.DeviceInFlightMode)
         } else {
             val permissions = arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
-            var permissionGranted = permissions.all {
-                ContextCompat.checkSelfPermission(activityWeakReference.get() as Activity, it) == PackageManager.PERMISSION_GRANTED
+            val permissionGranted = permissions.all {
+                ContextCompat.checkSelfPermission(activityWeakReference.get()!!, it) == PackageManager.PERMISSION_GRANTED
             }
 
             if (!permissionGranted) {
                 if (shouldWeRequestPermissions) {
                     ActivityCompat.requestPermissions(
-                        activityWeakReference.get() as Activity,
+                        activityWeakReference.get()!!,
                         permissions,
                         requestLocation
                     )
@@ -167,7 +168,7 @@ class GetLocation(
                     if (errCode == "01") {
                         if (activityWeakReference.get() == null) return@withContext
 
-                        val locationRequest = LocationRequest().apply {
+                        val locationRequest = LocationRequest.create().apply {
                             interval = 10000
                             fastestInterval = 2000
                             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -175,7 +176,7 @@ class GetLocation(
                         }
 
                         val task: Task<LocationSettingsResponse> =
-                            LocationServices.getSettingsClient(activityWeakReference.get() as Activity)
+                            LocationServices.getSettingsClient(activityWeakReference.get()!!)
                                 .checkLocationSettings(
                                     LocationSettingsRequest.Builder()
                                         .addLocationRequest(locationRequest).build()
@@ -196,7 +197,7 @@ class GetLocation(
                                 if (shouldWeRequestOptimization) {
                                     try {
                                         exception.startResolutionForResult(
-                                            activityWeakReference.get() as Activity,
+                                            activityWeakReference.get()!!,
                                             requestCheckSettings
                                         )
                                     } catch (sendEx: IntentSender.SendIntentException) {
@@ -266,5 +267,9 @@ class GetLocation(
                 show()
             }
         }
+    }
+
+    private fun isInFlightMode(context: Context): Boolean {
+        return Settings.System.getInt(context.contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
     }
 }
