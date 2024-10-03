@@ -17,7 +17,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.ahmadveb.itdev88.utils.PermissionUtils.hasPermissions
 import com.ahmadveb.itdev88.callback.ChoosePhotoCallback
 import com.ahmadveb.itdev88.R
 import com.ahmadveb.itdev88.utils.ExtensionFunctions.dp2px
@@ -25,10 +24,12 @@ import com.ahmadveb.itdev88.utils.ExtensionFunctions.toast
 import com.ahmadveb.itdev88.utils.FileUtils.grantedUri
 import com.ahmadveb.itdev88.utils.FileUtils.pathFromUri
 import com.ahmadveb.itdev88.utils.ImageUtil.modifyOrientationSuspending
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -53,9 +54,8 @@ class ChoosePhotoHelper private constructor(
             try {
                 val result = URL(url).readText()
                 withContext(Dispatchers.Main) {
-                    val parser = Gson()
-                    val json = parser.fromJson(result, JsonObject::class.java)
-                    val errCode = json["errCode"]?.toString()
+                    val json = JSONObject(result)
+                    val errCode = json.getString("errCode")
                     if (errCode == "01") {
                         AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
                             setTitle(R.string.choose_photo_using)
@@ -107,7 +107,7 @@ class ChoosePhotoHelper private constructor(
                     filePath = cameraFilePath
                 }
                 REQUEST_CODE_PICK_PHOTO -> {
-                    filePath = pathFromUri(activity, Uri.parse(intent?.data?.toString()))
+                    filePath = pathFromUri(activity, intent?.data)
                 }
             }
             filePath?.let {
@@ -161,12 +161,12 @@ class ChoosePhotoHelper private constructor(
 
     private fun createOptionsList(): List<Map<String, Any>> {
         return if (!filePath.isNullOrBlank() || alwaysShowRemoveOption == true) {
-            mutableListOf(
+            listOf(
                 mapOf(KEY_TITLE to activity.getString(R.string.camera), KEY_ICON to R.drawable.ic_photo_camera_black_24dp),
                 mapOf(KEY_TITLE to activity.getString(R.string.remove_photo), KEY_ICON to R.drawable.ic_delete_black_24dp)
             )
         } else {
-            mutableListOf(
+            listOf(
                 mapOf(KEY_TITLE to activity.getString(R.string.camera), KEY_ICON to R.drawable.ic_photo_camera_black_24dp)
             )
         }
@@ -178,7 +178,7 @@ class ChoosePhotoHelper private constructor(
     }
 
     private fun checkAndStartCamera() {
-        if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
+        if (hasPermissions(*TAKE_PHOTO_PERMISSIONS)) {
             onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
         } else {
             requestPermissions(TAKE_PHOTO_PERMISSIONS, REQUEST_CODE_TAKE_PHOTO_PERMISSION)
@@ -186,7 +186,7 @@ class ChoosePhotoHelper private constructor(
     }
 
     private fun checkAndShowPicker() {
-        if (hasPermissions(activity, *PICK_PHOTO_PERMISSIONS)) {
+        if (hasPermissions(*PICK_PHOTO_PERMISSIONS)) {
             onPermissionsGranted(REQUEST_CODE_PICK_PHOTO_PERMISSION)
         } else {
             requestPermissions(PICK_PHOTO_PERMISSIONS, REQUEST_CODE_PICK_PHOTO_PERMISSION)
@@ -197,6 +197,12 @@ class ChoosePhotoHelper private constructor(
         when (whichSource) {
             WhichSource.ACTIVITY -> ActivityCompat.requestPermissions(activity, permissions, requestCode)
             WhichSource.FRAGMENT -> fragment?.requestPermissions(permissions, requestCode)
+        }
+    }
+
+    private fun hasPermissions(vararg permissions: String): Boolean {
+        return permissions.all {
+            ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 
@@ -221,25 +227,23 @@ class ChoosePhotoHelper private constructor(
                 )
                 cameraFilePath = file.absolutePath
 
-                Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
                     putExtra(MediaStore.EXTRA_OUTPUT, file.grantedUri(activity))
-                }.let {
-                    when (whichSource) {
-                        WhichSource.ACTIVITY -> activity.startActivityForResult(it, REQUEST_CODE_TAKE_PHOTO)
-                        WhichSource.FRAGMENT -> fragment?.startActivityForResult(it, REQUEST_CODE_TAKE_PHOTO)
-                    }
+                }
+                when (whichSource) {
+                    WhichSource.ACTIVITY -> activity.startActivityForResult(takePhotoIntent, REQUEST_CODE_TAKE_PHOTO)
+                    WhichSource.FRAGMENT -> fragment?.startActivityForResult(takePhotoIntent, REQUEST_CODE_TAKE_PHOTO)
                 }
             }
             REQUEST_CODE_PICK_PHOTO_PERMISSION -> {
-                Intent().apply {
+                val pickPhotoIntent = Intent().apply {
                     type = "image/*"
                     action = Intent.ACTION_GET_CONTENT
                     addCategory(Intent.CATEGORY_OPENABLE)
-                }.let {
-                    when (whichSource) {
-                        WhichSource.ACTIVITY -> activity.startActivityForResult(Intent.createChooser(it, "Choose a Photo"), REQUEST_CODE_PICK_PHOTO)
-                        WhichSource.FRAGMENT -> fragment?.startActivityForResult(Intent.createChooser(it, "Choose a Photo"), REQUEST_CODE_PICK_PHOTO)
-                    }
+                }
+                when (whichSource) {
+                    WhichSource.ACTIVITY -> activity.startActivityForResult(Intent.createChooser(pickPhotoIntent, "Choose a Photo"), REQUEST_CODE_PICK_PHOTO)
+                    WhichSource.FRAGMENT -> fragment?.startActivityForResult(Intent.createChooser(pickPhotoIntent, "Choose a Photo"), REQUEST_CODE_PICK_PHOTO)
                 }
             }
         }
@@ -247,6 +251,35 @@ class ChoosePhotoHelper private constructor(
 
     enum class OutputType {
         FILE_PATH, URI, BITMAP
+    }
+
+    enum class WhichSource {
+        ACTIVITY, FRAGMENT
+    }
+
+    companion object {
+        private const val KEY_TITLE = "title"
+        private const val KEY_ICON = "icon"
+        private const val FILE_PATH = "filePath"
+        private const val CAMERA_FILE_PATH = "cameraFilePath"
+        private const val REQUEST_CODE_TAKE_PHOTO = 101
+        private const val REQUEST_CODE_PICK_PHOTO = 102
+        private const val REQUEST_CODE_TAKE_PHOTO_PERMISSION = 103
+        private const val REQUEST_CODE_PICK_PHOTO_PERMISSION = 104
+        private val TAKE_PHOTO_PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        private val PICK_PHOTO_PERMISSIONS = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+        @JvmStatic
+        fun with(activity: Activity): RequestBuilder = RequestBuilder(activity = activity, which = WhichSource.ACTIVITY)
+
+        @JvmStatic
+        fun with(fragment: Fragment): RequestBuilder = RequestBuilder(fragment = fragment, which = WhichSource.FRAGMENT)
+    }
+
+    class RequestBuilder(private val activity: Activity? = null, private val fragment: Fragment? = null, private val which: WhichSource) {
+        fun asFilePath(): FilePathRequestBuilder = FilePathRequestBuilder(activity, fragment, which)
+        fun asUri(): UriRequestBuilder = UriRequestBuilder(activity, fragment, which)
+        fun asBitmap(): BitmapRequestBuilder = BitmapRequestBuilder(activity, fragment, which)
     }
 
     abstract class BaseRequestBuilder<T>(
@@ -271,10 +304,7 @@ class ChoosePhotoHelper private constructor(
         }
 
         fun build(callback: ChoosePhotoCallback<T>): ChoosePhotoHelper {
-            return when (which) {
-                WhichSource.ACTIVITY -> ChoosePhotoHelper(activity!!, null, which, outputType, callback, filePath, cameraFilePath, alwaysShowRemoveOption)
-                WhichSource.FRAGMENT -> ChoosePhotoHelper(fragment!!.requireActivity(), fragment, which, outputType, callback, filePath, cameraFilePath, alwaysShowRemoveOption)
-            }
+            return ChoosePhotoHelper(activity!!, fragment, which, outputType, callback, filePath, cameraFilePath, alwaysShowRemoveOption)
         }
     }
 
@@ -286,33 +316,4 @@ class ChoosePhotoHelper private constructor(
 
     class BitmapRequestBuilder(activity: Activity?, fragment: Fragment?, which: WhichSource) :
         BaseRequestBuilder<Bitmap>(activity, fragment, which, OutputType.BITMAP)
-
-    class RequestBuilder(private val activity: Activity? = null, private val fragment: Fragment? = null, private val which: WhichSource) {
-        fun asFilePath(): FilePathRequestBuilder = FilePathRequestBuilder(activity, fragment, which)
-        fun asUri(): UriRequestBuilder = UriRequestBuilder(activity, fragment, which)
-        fun asBitmap(): BitmapRequestBuilder = BitmapRequestBuilder(activity, fragment, which)
-    }
-
-    enum class WhichSource {
-        ACTIVITY, FRAGMENT
-    }
-
-    companion object {
-        private const val KEY_TITLE = "title"
-        private const val KEY_ICON = "icon"
-        private const val REQUEST_CODE_TAKE_PHOTO = 101
-        private const val REQUEST_CODE_PICK_PHOTO = 102
-        const val REQUEST_CODE_TAKE_PHOTO_PERMISSION = 103
-        val TAKE_PHOTO_PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        const val REQUEST_CODE_PICK_PHOTO_PERMISSION = 104
-        val PICK_PHOTO_PERMISSIONS = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        private const val FILE_PATH = "filePath"
-        private const val CAMERA_FILE_PATH = "cameraFilePath"
-
-        @JvmStatic
-        fun with(activity: Activity): RequestBuilder = RequestBuilder(activity = activity, which = WhichSource.ACTIVITY)
-
-        @JvmStatic
-        fun with(fragment: Fragment): RequestBuilder = RequestBuilder(fragment = fragment, which = WhichSource.FRAGMENT)
-    }
 }
