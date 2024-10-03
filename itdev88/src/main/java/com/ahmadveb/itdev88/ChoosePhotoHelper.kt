@@ -101,42 +101,48 @@ class ChoosePhotoHelper private constructor(
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (resultCode == Activity.RESULT_OK) {
-            when (requestCode) {
-                REQUEST_CODE_TAKE_PHOTO -> {
-                    filePath = cameraFilePath
-                }
-                REQUEST_CODE_PICK_PHOTO -> {
-                    filePath = pathFromUri(activity, intent?.data)
+    if (resultCode == Activity.RESULT_OK) {
+        when (requestCode) {
+            REQUEST_CODE_TAKE_PHOTO -> {
+                filePath = cameraFilePath
+            }
+            REQUEST_CODE_PICK_PHOTO -> {
+                intent?.data?.let { uri ->
+                    filePath = pathFromUri(activity, uri)
+                } ?: run {
+                    // Handle the case where the Uri is null
+                    Log.e("ChoosePhotoHelper", "Error: Uri is null")
+                    return
                 }
             }
-            filePath?.let {
-                @Suppress("UNCHECKED_CAST")
-                when (outputType) {
-                    OutputType.FILE_PATH -> {
-                        (callback as ChoosePhotoCallback<String>).onChoose(it)
-                    }
-                    OutputType.URI -> {
-                        val uri = Uri.fromFile(File(it))
-                        (callback as ChoosePhotoCallback<Uri>).onChoose(uri)
-                    }
-                    OutputType.BITMAP -> {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            var bitmap = BitmapFactory.decodeFile(it)
-                            try {
-                                bitmap = modifyOrientationSuspending(bitmap, it)
-                            } catch (e: IOException) {
-                                e.printStackTrace()
-                            }
-                            withContext(Dispatchers.Main) {
-                                (callback as ChoosePhotoCallback<Bitmap>).onChoose(bitmap)
-                            }
+        }
+        filePath?.let {
+            @Suppress("UNCHECKED_CAST")
+            when (outputType) {
+                OutputType.FILE_PATH -> {
+                    (callback as ChoosePhotoCallback<String>).onChoose(it)
+                }
+                OutputType.URI -> {
+                    val uri = Uri.fromFile(File(it))
+                    (callback as ChoosePhotoCallback<Uri>).onChoose(uri)
+                }
+                OutputType.BITMAP -> {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        var bitmap = BitmapFactory.decodeFile(it)
+                        try {
+                            bitmap = modifyOrientationSuspending(bitmap, it)
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
+                        withContext(Dispatchers.Main) {
+                            (callback as ChoosePhotoCallback<Bitmap>).onChoose(bitmap)
                         }
                     }
                 }
             }
         }
     }
+}
 
     fun onSaveInstanceState(outState: Bundle) {
         outState.putString(FILE_PATH, filePath)
