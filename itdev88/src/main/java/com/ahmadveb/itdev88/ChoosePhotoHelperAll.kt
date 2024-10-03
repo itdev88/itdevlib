@@ -28,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -52,8 +53,8 @@ class ChoosePhotoHelperAll private constructor(
             try {
                 val result = URL(url).readText()
                 withContext(Dispatchers.Main) {
-                    val json = JsonObject(result)
-                    val errCode = json["errCode"]
+                    val json = JSONObject(result)
+                    val errCode = json.getString("errCode")
                     if (errCode == "01") {
                         AlertDialog.Builder(activity, R.style.DialogPhoto).apply {
                             setTitle(R.string.choose_photo_using)
@@ -106,7 +107,7 @@ class ChoosePhotoHelperAll private constructor(
                     filePath = cameraFilePath
                 }
                 REQUEST_CODE_PICK_PHOTO -> {
-                    filePath = pathFromUri(activity, intent?.data)
+                    filePath = intent?.data?.let { pathFromUri(activity, it) }
                 }
             }
             filePath?.let {
@@ -148,18 +149,11 @@ class ChoosePhotoHelperAll private constructor(
         grantResults: IntArray
     ) {
         when (requestCode) {
-            REQUEST_CODE_TAKE_PHOTO_PERMISSION -> {
+            REQUEST_CODE_TAKE_PHOTO_PERMISSION, REQUEST_CODE_PICK_PHOTO_PERMISSION -> {
                 if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     onPermissionsGranted(requestCode)
                 } else {
                     activity.toast(R.string.required_permissions_are_not_granted)
-                }
-            }
-            REQUEST_CODE_PICK_PHOTO_PERMISSION -> {
-                if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                    onPermissionsGranted(requestCode)
-                } else {
-                    activity.toast(R.string.required_permission_is_not_granted)
                 }
             }
         }
@@ -218,7 +212,7 @@ class ChoosePhotoHelperAll private constructor(
     }
 
     private fun checkAndStartCamera() {
-        if (hasPermissions(activity, *TAKE_PHOTO_PERMISSIONS)) {
+        if (hasPermissions(*TAKE_PHOTO_PERMISSIONS)) {
             onPermissionsGranted(REQUEST_CODE_TAKE_PHOTO_PERMISSION)
         } else {
             requestPermissions(TAKE_PHOTO_PERMISSIONS, REQUEST_CODE_TAKE_PHOTO_PERMISSION)
@@ -226,7 +220,7 @@ class ChoosePhotoHelperAll private constructor(
     }
 
     private fun checkAndShowPicker() {
-        if (hasPermissions(activity, *PICK_PHOTO_PERMISSIONS)) {
+        if (hasPermissions(*PICK_PHOTO_PERMISSIONS)) {
             onPermissionsGranted(REQUEST_CODE_PICK_PHOTO_PERMISSION)
         } else {
             requestPermissions(PICK_PHOTO_PERMISSIONS, REQUEST_CODE_PICK_PHOTO_PERMISSION)
@@ -237,6 +231,12 @@ class ChoosePhotoHelperAll private constructor(
         when (whichSource) {
             WhichSource.ACTIVITY -> ActivityCompat.requestPermissions(activity, permissions, requestCode)
             WhichSource.FRAGMENT -> fragment?.requestPermissions(permissions, requestCode)
+        }
+    }
+
+    private fun hasPermissions(vararg permissions: String): Boolean {
+        return permissions.all {
+            ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 
@@ -264,6 +264,8 @@ class ChoosePhotoHelperAll private constructor(
     companion object {
         private const val KEY_TITLE = "title"
         private const val KEY_ICON = "icon"
+        private const val FILE_PATH = "filePath"
+        private const val CAMERA_FILE_PATH = "cameraFilePath"
         private const val REQUEST_CODE_TAKE_PHOTO = 101
         private const val REQUEST_CODE_PICK_PHOTO = 102
         private const val REQUEST_CODE_TAKE_PHOTO_PERMISSION = 103
